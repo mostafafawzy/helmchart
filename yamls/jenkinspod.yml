@@ -1,0 +1,186 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/secrets: 359cfa6b91afa67c24e23e833ee1603465656f0377bc716f17dd76703cbd7170
+    creationTimestamp: "2022-03-27T10:39:14Z"
+    generateName: my-release-jenkins-748dd5487-
+    labels:
+      app.kubernetes.io/instance: my-release
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: jenkins
+      helm.sh/chart: jenkins-9.0.9
+      pod-template-hash: 748dd5487
+    name: my-release-jenkins-748dd5487-f5hvv
+    namespace: jenkins
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: my-release-jenkins-748dd5487
+      uid: 7df27625-c3a8-4164-be53-be57165cd770
+    resourceVersion: "3423"
+    uid: e76ec398-4c67-4b1d-8c47-15c96311166f
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: my-release
+                app.kubernetes.io/name: jenkins
+            namespaces:
+            - jenkins
+            topologyKey: kubernetes.io/hostname
+          weight: 1
+    containers:
+    - env:
+      - name: JENKINS_USERNAME
+        value: user
+      - name: JENKINS_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: jenkins-password
+            name: my-release-jenkins
+      - name: JENKINS_HOME
+        value: /bitnami/jenkins/home
+      - name: DISABLE_JENKINS_INITIALIZATION
+        value: "no"
+      - name: JENKINS_HOST
+      - name: JENKINS_EXTERNAL_HTTP_PORT_NUMBER
+        value: "80"
+      - name: JENKINS_EXTERNAL_HTTPS_PORT_NUMBER
+        value: "443"
+      image: docker.io/bitnami/jenkins:2.332.1-debian-10-r5
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 6
+        httpGet:
+          path: /login
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 180
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: jenkins
+      ports:
+      - containerPort: 8080
+        name: http
+        protocol: TCP
+      - containerPort: 8443
+        name: https
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /login
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      resources:
+        requests:
+          cpu: 300m
+          memory: 512Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /bitnami/jenkins
+        name: jenkins-data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-nn727
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k8s-worker1
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1001
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: jenkins-data
+      persistentVolumeClaim:
+        claimName: my-release-jenkins
+    - name: kube-api-access-nn727
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2022-03-27T11:03:09Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2022-03-27T11:06:50Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2022-03-27T11:06:50Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2022-03-27T11:03:09Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://adceff05d471cc5f938d310e589266fcc24bd6a29ae0fb68ae4619e5f8559b7f
+      image: docker.io/bitnami/jenkins:2.332.1-debian-10-r5
+      imageID: docker.io/bitnami/jenkins@sha256:6fdd712502b523526ac543953a9104f589bace88913d3d8e8d24ca156607c46b
+      lastState: {}
+      name: jenkins
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2022-03-27T11:06:08Z"
+    hostIP: 172.31.19.88
+    phase: Running
+    podIP: 10.44.0.1
+    podIPs:
+    - ip: 10.44.0.1
+    qosClass: Burstable
+    startTime: "2022-03-27T11:03:09Z"
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

@@ -1,0 +1,283 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-03-27T10:34:47Z"
+  generateName: weave-net-
+  labels:
+    controller-revision-hash: 59d968cb54
+    name: weave-net
+    pod-template-generation: "1"
+  name: weave-net-bpkxt
+  namespace: kube-system
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: DaemonSet
+    name: weave-net
+    uid: e93509f5-dd12-48a5-af38-7fd08ed3c48a
+  resourceVersion: "912"
+  uid: 29a40aba-6d26-42ac-8d05-5c915bd9ea39
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchFields:
+          - key: metadata.name
+            operator: In
+            values:
+            - k8s-worker1
+  containers:
+  - command:
+    - /home/weave/launch.sh
+    env:
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: INIT_CONTAINER
+      value: "true"
+    image: ghcr.io/weaveworks/launcher/weave-kube:2.8.1
+    imagePullPolicy: IfNotPresent
+    name: weave
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        host: 127.0.0.1
+        path: /status
+        port: 6784
+        scheme: HTTP
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /weavedb
+      name: weavedb
+    - mountPath: /host/var/lib/dbus
+      name: dbus
+    - mountPath: /host/etc/machine-id
+      name: machine-id
+      readOnly: true
+    - mountPath: /run/xtables.lock
+      name: xtables-lock
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-wh4f9
+      readOnly: true
+  - env:
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    image: ghcr.io/weaveworks/launcher/weave-npc:2.8.1
+    imagePullPolicy: IfNotPresent
+    name: weave-npc
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /run/xtables.lock
+      name: xtables-lock
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-wh4f9
+      readOnly: true
+  dnsPolicy: ClusterFirstWithHostNet
+  enableServiceLinks: true
+  hostNetwork: true
+  initContainers:
+  - command:
+    - /home/weave/init.sh
+    image: ghcr.io/weaveworks/launcher/weave-kube:2.8.1
+    imagePullPolicy: IfNotPresent
+    name: weave-init
+    resources: {}
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /host/opt
+      name: cni-bin
+    - mountPath: /host/home
+      name: cni-bin2
+    - mountPath: /host/etc
+      name: cni-conf
+    - mountPath: /lib/modules
+      name: lib-modules
+    - mountPath: /run/xtables.lock
+      name: xtables-lock
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-wh4f9
+      readOnly: true
+  nodeName: k8s-worker1
+  preemptionPolicy: PreemptLowerPriority
+  priority: 2000001000
+  priorityClassName: system-node-critical
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    seLinuxOptions: {}
+  serviceAccount: weave-net
+  serviceAccountName: weave-net
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/disk-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/memory-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/pid-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/unschedulable
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/network-unavailable
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /var/lib/weave
+      type: ""
+    name: weavedb
+  - hostPath:
+      path: /opt
+      type: ""
+    name: cni-bin
+  - hostPath:
+      path: /home
+      type: ""
+    name: cni-bin2
+  - hostPath:
+      path: /etc
+      type: ""
+    name: cni-conf
+  - hostPath:
+      path: /var/lib/dbus
+      type: ""
+    name: dbus
+  - hostPath:
+      path: /lib/modules
+      type: ""
+    name: lib-modules
+  - hostPath:
+      path: /etc/machine-id
+      type: FileOrCreate
+    name: machine-id
+  - hostPath:
+      path: /run/xtables.lock
+      type: FileOrCreate
+    name: xtables-lock
+  - name: kube-api-access-wh4f9
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-27T10:35:00Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-27T10:35:37Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-27T10:35:37Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-27T10:34:47Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://8ee72cd46dbb1f9ea747d84e40f18f46bc04ac034338a449eb6f2be111d043c6
+    image: ghcr.io/weaveworks/launcher/weave-kube:2.8.1
+    imageID: ghcr.io/weaveworks/launcher/weave-kube@sha256:d797338e7beb17222e10757b71400d8471bdbd9be13b5da38ce2ebf597fb4e63
+    lastState:
+      terminated:
+        containerID: containerd://fb15e7cde4ecd9a9fdad6d80e7f91385a227b3fed52e4207ad2fd7ba5bb74cd9
+        exitCode: 1
+        finishedAt: "2022-03-27T10:35:30Z"
+        reason: Error
+        startedAt: "2022-03-27T10:35:00Z"
+    name: weave
+    ready: true
+    restartCount: 1
+    started: true
+    state:
+      running:
+        startedAt: "2022-03-27T10:35:31Z"
+  - containerID: containerd://acfd752fc0596452787d5a5a16d26a28e07643fc853ce51d435fbf6be83e9c0b
+    image: ghcr.io/weaveworks/launcher/weave-npc:2.8.1
+    imageID: ghcr.io/weaveworks/launcher/weave-npc@sha256:38d3e30a97a2260558f8deb0fc4c079442f7347f27c86660dbfc8ca91674f14c
+    lastState: {}
+    name: weave-npc
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-03-27T10:35:03Z"
+  hostIP: 172.31.19.88
+  initContainerStatuses:
+  - containerID: containerd://4df3b0e2c73350dc8a65ddab7b8289bc593fb34fb25b8cdc6774c49e37755afc
+    image: ghcr.io/weaveworks/launcher/weave-kube:2.8.1
+    imageID: ghcr.io/weaveworks/launcher/weave-kube@sha256:d797338e7beb17222e10757b71400d8471bdbd9be13b5da38ce2ebf597fb4e63
+    lastState: {}
+    name: weave-init
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://4df3b0e2c73350dc8a65ddab7b8289bc593fb34fb25b8cdc6774c49e37755afc
+        exitCode: 0
+        finishedAt: "2022-03-27T10:34:59Z"
+        reason: Completed
+        startedAt: "2022-03-27T10:34:57Z"
+  phase: Running
+  podIP: 172.31.19.88
+  podIPs:
+  - ip: 172.31.19.88
+  qosClass: Burstable
+  startTime: "2022-03-27T10:34:47Z"
